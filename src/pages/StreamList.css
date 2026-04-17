@@ -1,0 +1,141 @@
+/* Main container */
+.streamlist-card {
+  width: 95%;
+  max-width: 1400px;
+  margin: 40px auto;
+  background: #f8f9fb;
+  padding: 30px;
+  border-radius: 16px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+}
+
+/* Title */
+.streamlist-card h1 {
+  margin-bottom: 6px;
+  color: #0f172a;
+}
+
+.streamlist-card p {
+  color: #64748b;
+  margin-bottom: 20px;
+}
+
+/* Form */
+.streamlist-card .streamlist-form {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 25px;
+  flex-wrap: wrap;
+}
+
+.streamlist-card .streamlist-form input {
+  flex: 1;
+  min-width: 220px;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+}
+
+/* 3 columns */
+.streamlist-card .sections-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  width: 100%;
+}
+
+/* Each column */
+.streamlist-card .category-section {
+  background: white;
+  border-radius: 12px;
+  padding: 18px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  min-height: 450px;
+}
+
+.streamlist-card .category-section:nth-child(1) {
+  border-top: 4px solid #2563eb;
+}
+
+.streamlist-card .category-section:nth-child(2) {
+  border-top: 4px solid #16a34a;
+}
+
+.streamlist-card .category-section:nth-child(3) {
+  border-top: 4px solid #f59e0b;
+}
+
+.streamlist-card .category-section h2 {
+  margin-bottom: 12px;
+  color: #111827;
+}
+
+/* Items */
+.streamlist-card .media-item {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 12px;
+  transition: 0.2s;
+}
+
+.streamlist-card .media-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+}
+
+.streamlist-card .media-item input {
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  width: 100%;
+}
+
+/* Info */
+.streamlist-card .media-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Buttons */
+.streamlist-card .media-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* View all */
+.streamlist-card .view-button {
+  margin-top: 10px;
+  width: 100%;
+}
+
+/* Rating */
+.streamlist-card .rating-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.streamlist-card .rating-row select {
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+}
+
+.streamlist-card .rating-text {
+  margin-top: 6px;
+  font-size: 14px;
+  color: #475569;
+}
+
+/* Mobile */
+@media (max-width: 900px) {
+  .streamlist-card .sections-container {
+    grid-template-columns: 1fr;
+  }
+}

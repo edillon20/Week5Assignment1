@@ -9,6 +9,16 @@ function formatCardNumber(value) {
   return digits.replace(/(.{4})/g, "$1 ").trim();
 }
 
+function formatExpiration(value) {
+  const digits = value.replace(/\D/g, "").slice(0, 4);
+
+  if (digits.length <= 2) {
+    return digits;
+  }
+
+  return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+}
+
 function Checkout({ cartItems = [], clearCart, addOrder }) {
   const navigate = useNavigate();
   const isOffline = useOfflineStatus();
@@ -27,7 +37,7 @@ function Checkout({ cartItems = [], clearCart, addOrder }) {
     zipCode: "",
     cardName: "",
     cardNumber: "",
-    expiry: "",
+    expiration: "",
     cvv: "",
   });
 
@@ -64,7 +74,7 @@ function Checkout({ cartItems = [], clearCart, addOrder }) {
           ...prev,
           cardName: selectedCard.cardHolder || "",
           cardNumber: selectedCard.cardNumber || "",
-          expiry: selectedCard.expiry || "",
+          expiration: selectedCard.expiration || "",
           cvv: selectedCard.cvv || "",
         }));
 
@@ -105,7 +115,12 @@ function Checkout({ cartItems = [], clearCart, addOrder }) {
 
     setFormData((prev) => ({
       ...prev,
-      [name]: name === "cardNumber" ? formatCardNumber(value) : value,
+      [name]:
+        name === "cardNumber"
+          ? formatCardNumber(value)
+          : name === "expiration"
+          ? formatExpiration(value)
+          : value,
     }));
   };
 
@@ -156,8 +171,8 @@ function Checkout({ cartItems = [], clearCart, addOrder }) {
       newErrors.cardNumber = "Enter a valid card number.";
     }
 
-    if (!formData.expiry.trim()) {
-      newErrors.expiry = "Expiry date is required.";
+    if (!formData.expiration.trim()) {
+      newErrors.expiration = "Expiration date is required.";
     }
 
     if (!formData.cvv.trim()) {
@@ -374,12 +389,13 @@ function Checkout({ cartItems = [], clearCart, addOrder }) {
 
           <input
             type="text"
-            name="expiry"
+            name="expiration"
             placeholder="MM/YY"
-            value={formData.expiry}
+            value={formData.expiration}
             onChange={handleChange}
+            maxLength={5}
           />
-          {errors.expiry && <p className="checkout-error">{errors.expiry}</p>}
+          {errors.expiration && <p className="checkout-error">{errors.expiration}</p>}
 
           <input
             type="text"

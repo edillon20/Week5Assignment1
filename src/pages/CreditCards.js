@@ -21,7 +21,7 @@ function CreditCards() {
   const [formData, setFormData] = useState({
     cardHolder: "",
     cardNumber: "",
-    expiry: "",
+    expiration: "",
     cvv: "",
   });
 
@@ -72,9 +72,29 @@ function CreditCards() {
   const handleChange = (e) => {
     const { name, value } = e.target;
 
+    let formattedValue = value;
+
+    if (name === "cardNumber") {
+      formattedValue = formatCardNumber(value);
+    }
+
+    if (name === "expiration") {
+      const digits = value.replace(/\D/g, "").slice(0, 4);
+
+      if (digits.length >= 3) {
+        formattedValue = `${digits.slice(0, 2)}/${digits.slice(2)}`;
+      } else {
+        formattedValue = digits;
+      }
+    }
+
+    if (name === "cvv") {
+      formattedValue = value.replace(/\D/g, "").slice(0, 4);
+    }
+
     setFormData((prev) => ({
       ...prev,
-      [name]: name === "cardNumber" ? formatCardNumber(value) : value,
+      [name]: formattedValue,
     }));
   };
 
@@ -92,7 +112,7 @@ function CreditCards() {
     setFormData({
       cardHolder: "",
       cardNumber: "",
-      expiry: "",
+      expiration: "",
       cvv: "",
     });
   };
@@ -134,10 +154,11 @@ function CreditCards() {
 
         <input
           type="text"
-          name="expiry"
+          name="expiration"
           placeholder="MM/YY"
-          value={formData.expiry}
+          value={formData.expiration}
           onChange={handleChange}
+          maxLength={5}
         />
 
         <input
@@ -146,6 +167,7 @@ function CreditCards() {
           placeholder="CVV"
           value={formData.cvv}
           onChange={handleChange}
+          maxLength={4}
         />
 
         <button type="submit" className="btn-primary">
@@ -163,7 +185,7 @@ function CreditCards() {
             <div key={card.id} className="order-card">
               <p><strong>{card.cardHolder}</strong></p>
               <p>**** **** **** {card.last4}</p>
-              <p>Expiry: {card.expiry}</p>
+              <p>Expiration: {card.expiration}</p>
 
               <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
                 <button

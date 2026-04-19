@@ -39,8 +39,7 @@ function Navbar({ cartCount = 0 }) {
 
       <div className="navigationlinks">
         <NavLink
-          to="/"
-          end
+          to="/streamlist"
           className={({ isActive }) => (isActive ? "active-link" : "")}
         >
           Home

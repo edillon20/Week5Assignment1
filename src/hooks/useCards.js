@@ -5,11 +5,12 @@ export function useCards() {
 
   useEffect(() => {
     const savedCards = localStorage.getItem("creditCards");
+
     if (!savedCards) return;
 
     try {
-      const parsed = JSON.parse(savedCards);
-      setCards(Array.isArray(parsed) ? parsed : []);
+      const parsedCards = JSON.parse(savedCards);
+      setCards(Array.isArray(parsedCards) ? parsedCards : []);
     } catch {
       setCards([]);
     }
@@ -19,7 +20,7 @@ export function useCards() {
     localStorage.setItem("creditCards", JSON.stringify(cards));
   }, [cards]);
 
-  const addCard = (card) => {
+  const validateCard = (card) => {
     if (!card.cardHolder.trim()) {
       return { ok: false, message: "Card holder name is required." };
     }
@@ -56,14 +57,48 @@ export function useCards() {
       };
     }
 
+    return { ok: true };
+  };
+
+  const addCard = (card) => {
+    const validation = validateCard(card);
+
+    if (!validation.ok) {
+      return validation;
+    }
+
     const newCard = {
       id: crypto.randomUUID(),
       ...card,
       last4: card.cardNumber.slice(-4),
       createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
 
     setCards((prev) => [newCard, ...prev]);
+    return { ok: true };
+  };
+
+  const updateCard = (id, updatedCard) => {
+    const validation = validateCard(updatedCard);
+
+    if (!validation.ok) {
+      return validation;
+    }
+
+    setCards((prev) =>
+      prev.map((card) =>
+        card.id === id
+          ? {
+              ...card,
+              ...updatedCard,
+              last4: updatedCard.cardNumber.slice(-4),
+              updatedAt: new Date().toISOString(),
+            }
+          : card
+      )
+    );
+
     return { ok: true };
   };
 
@@ -71,5 +106,10 @@ export function useCards() {
     setCards((prev) => prev.filter((card) => card.id !== id));
   };
 
-  return { cards, addCard, deleteCard };
+  return {
+    cards,
+    addCard,
+    updateCard,
+    deleteCard,
+  };
 }

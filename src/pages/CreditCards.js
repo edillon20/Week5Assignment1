@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Toast from "../components/Toast";
-import { useCards } from "../hooks/useCards";
 import ConfirmDialog from "../components/ConfirmDialog";
 
 function formatCardNumber(value) {
@@ -9,14 +8,14 @@ function formatCardNumber(value) {
   return digits.replace(/(.{4})/g, "$1 ").trim();
 }
 
-function CreditCards() {
-  const { cards, addCard, deleteCard } = useCards();
+function CreditCards({ cards = [], addCard, updateCard, deleteCard }) {
   const navigate = useNavigate();
   const location = useLocation();
 
   const returnTo = location.state?.returnTo || "/checkout";
 
   const [toast, setToast] = useState({ message: "", type: "success" });
+  const [editingId, setEditingId] = useState(null);
 
   const [formData, setFormData] = useState({
     cardHolder: "",
@@ -32,6 +31,16 @@ function CreditCards() {
   });
 
   const closeToast = () => setToast({ message: "", type: "success" });
+
+  const resetForm = () => {
+    setFormData({
+      cardHolder: "",
+      cardNumber: "",
+      expiration: "",
+      cvv: "",
+    });
+    setEditingId(null);
+  };
 
   const openDeleteDialog = (card) => {
     setDialog({
@@ -54,6 +63,10 @@ function CreditCards() {
       id: null,
       cardName: "",
     });
+
+    if (editingId === dialog.id) {
+      resetForm();
+    }
   };
 
   const cancelDelete = () => {
@@ -69,6 +82,16 @@ function CreditCards() {
     navigate(returnTo);
   };
 
+  const handleEditCard = (card) => {
+    setEditingId(card.id);
+    setFormData({
+      cardHolder: card.cardHolder || "",
+      cardNumber: card.cardNumber || "",
+      expiration: card.expiration || "",
+      cvv: card.cvv || "",
+    });
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -81,8 +104,21 @@ function CreditCards() {
     if (name === "expiration") {
       const digits = value.replace(/\D/g, "").slice(0, 4);
 
-      if (digits.length >= 3) {
-        formattedValue = `${digits.slice(0, 2)}/${digits.slice(2)}`;
+      if (digits.length === 1) {
+        const firstDigit = Number(digits);
+        formattedValue = firstDigit > 1 ? `0${firstDigit}` : digits;
+      } else if (digits.length >= 2) {
+        let month = Number(digits.slice(0, 2));
+
+        if (month < 1) month = 1;
+        if (month > 12) month = 12;
+
+        const formattedMonth = month.toString().padStart(2, "0");
+        const year = digits.slice(2);
+
+        formattedValue = year
+          ? `${formattedMonth}/${year}`
+          : formattedMonth;
       } else {
         formattedValue = digits;
       }
@@ -101,20 +137,23 @@ function CreditCards() {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    const result = addCard(formData);
+    const result = editingId
+      ? updateCard(editingId, formData)
+      : addCard(formData);
 
     if (!result.ok) {
       setToast({ message: result.message, type: "error" });
       return;
     }
 
-    setToast({ message: "Card saved successfully.", type: "success" });
-    setFormData({
-      cardHolder: "",
-      cardNumber: "",
-      expiration: "",
-      cvv: "",
+    setToast({
+      message: editingId
+        ? "Card updated successfully."
+        : "Card saved successfully.",
+      type: "success",
     });
+
+    resetForm();
   };
 
   return (
@@ -131,7 +170,7 @@ function CreditCards() {
         onCancel={cancelDelete}
       />
 
-      <h2>Credit Card Management</h2>
+      <h2>Saved Cards</h2>
       <p>Add and manage your saved cards.</p>
 
       <form onSubmit={handleSubmit} className="checkout-form">
@@ -170,9 +209,21 @@ function CreditCards() {
           maxLength={4}
         />
 
-        <button type="submit" className="btn-primary">
-          Save Card
-        </button>
+        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+          <button type="submit" className="btn-primary">
+            {editingId ? "Update Card" : "Save Card"}
+          </button>
+
+          {editingId && (
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={resetForm}
+            >
+              Cancel Edit
+            </button>
+          )}
+        </div>
       </form>
 
       <div style={{ marginTop: "24px" }}>
@@ -194,6 +245,14 @@ function CreditCards() {
                   onClick={() => handleUseSavedCard(card)}
                 >
                   Use This Card
+                </button>
+
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => handleEditCard(card)}
+                >
+                  Edit
                 </button>
 
                 <button

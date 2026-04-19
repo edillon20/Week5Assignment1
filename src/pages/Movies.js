@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Toast from "../components/Toast";
+import { useAuth } from "../auth/AuthContext";
 
 function Movies({ addToCart, addMovieToWatchList }) {
   const [movies, setMovies] = useState([]);
@@ -8,6 +10,9 @@ function Movies({ addToCart, addMovieToWatchList }) {
   const [error, setError] = useState("");
   const [toast, setToast] = useState({ message: "", type: "success" });
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
+
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
   const apiKey = process.env.REACT_APP_TMDB_API_KEY;
 
@@ -133,6 +138,56 @@ function Movies({ addToCart, addMovieToWatchList }) {
     loadNowPlayingMovies();
   }, [apiKey]);
 
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const pendingActionRaw = localStorage.getItem("pendingMovieAction");
+    if (!pendingActionRaw) return;
+
+    try {
+      const pendingAction = JSON.parse(pendingActionRaw);
+
+      if (!pendingAction?.movie || !pendingAction?.type) {
+        localStorage.removeItem("pendingMovieAction");
+        return;
+      }
+
+      if (pendingAction.type === "watchlist") {
+        const result = addMovieToWatchList(pendingAction.movie);
+
+        if (!result?.ok) {
+          showToast(result?.message || "Could not add movie to watch list.", "error");
+        } else {
+          showToast(`"${pendingAction.movie.title}" added to your watch list.`);
+        }
+      }
+
+      if (pendingAction.type === "cart") {
+        const result = addToCart({
+          id: `movie-${pendingAction.movie.id}`,
+          name: pendingAction.movie.title,
+          description: pendingAction.movie.overview || "Movie rental",
+          price: Math.floor(Math.random() * (25 - 10 + 1)) + 10,
+          image: pendingAction.movie.poster_path
+            ? `https://image.tmdb.org/t/p/w300${pendingAction.movie.poster_path}`
+            : "",
+          quantity: 1,
+          type: "movie",
+        });
+
+        if (result?.success === false) {
+          showToast(result.message || "Could not add movie to cart.", "error");
+        } else {
+          showToast(`"${pendingAction.movie.title}" added to cart.`);
+        }
+      }
+    } catch {
+      showToast("Could not restore your pending movie action.", "error");
+    } finally {
+      localStorage.removeItem("pendingMovieAction");
+    }
+  }, [isAuthenticated, addMovieToWatchList, addToCart]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -207,7 +262,25 @@ function Movies({ addToCart, addMovieToWatchList }) {
     }
   };
 
+  const savePendingActionAndRedirect = (type, movie) => {
+    localStorage.setItem(
+      "pendingMovieAction",
+      JSON.stringify({ type, movie })
+    );
+
+    showToast("Please log in to continue.", "error");
+
+    setTimeout(() => {
+      navigate("/login");
+    }, 1000);
+  };
+
   const handleAddToWatchList = (movie) => {
+    if (!isAuthenticated) {
+      savePendingActionAndRedirect("watchlist", movie);
+      return;
+    }
+
     if (typeof addMovieToWatchList !== "function") {
       showToast("Could not add movie to watch list.", "error");
       return;
@@ -224,6 +297,11 @@ function Movies({ addToCart, addMovieToWatchList }) {
   };
 
   const handleAddToCart = (movie) => {
+    if (!isAuthenticated) {
+      savePendingActionAndRedirect("cart", movie);
+      return;
+    }
+
     if (typeof addToCart !== "function") {
       showToast("Could not add movie to cart.", "error");
       return;
@@ -259,6 +337,13 @@ function Movies({ addToCart, addMovieToWatchList }) {
 
       <h2>Search for fun new movies.</h2>
       <p>Enter a key term to find new movies to add to your watch list!</p>
+
+      {!isAuthenticated && (
+        <p className="offline-message">
+          You can browse movies without logging in, but you must log in to add
+          items to your watch list or cart.
+        </p>
+      )}
 
       {isOffline && (
         <p className="offline-message">

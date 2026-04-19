@@ -1,50 +1,41 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { GoogleLogin } from "@react-oauth/google";
 import { useAuth } from "../auth/AuthContext";
+
+function parseJwt(token) {
+  try {
+    return JSON.parse(atob(token.split(".")[1]));
+  } catch {
+    return null;
+  }
+}
 
 function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
-
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
-
   const [error, setError] = useState("");
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
+  const handleGoogleSuccess = (credentialResponse) => {
+    const token = credentialResponse?.credential;
+    const profile = parseJwt(token);
 
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    if (!profile) {
+      setError("Google login failed.");
+      return;
+    }
+
+    login({
+      name: profile.name,
+      email: profile.email,
+      picture: profile.picture,
+    });
+
+    navigate("/movies", { replace: true });
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    const email = formData.email.trim();
-    const password = formData.password.trim();
-
-    if (!email || !password) {
-      setError("Email and password are required.");
-      return;
-    }
-
-    // Demo login for class project
-    if (email === "student@uagc.edu" && password === "Password123") {
-      login({
-        name: "Student User",
-        email,
-      });
-
-      navigate("/", { replace: true });
-      return;
-    }
-
-    setError("Invalid email or password.");
+  const handleGoogleError = () => {
+    setError("Google login was unsuccessful.");
   };
 
   return (
@@ -52,29 +43,13 @@ function Login() {
       <h2>Login</h2>
       <p>Please sign in to access the application.</p>
 
-      <form onSubmit={handleSubmit} className="checkout-form">
-        <input
-          type="email"
-          name="email"
-          placeholder="Email Address"
-          value={formData.email}
-          onChange={handleChange}
-        />
+      <GoogleLogin
+        onSuccess={handleGoogleSuccess}
+        onError={handleGoogleError}
+        useOneTap={false}
+      />
 
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          value={formData.password}
-          onChange={handleChange}
-        />
-
-        {error && <p className="checkout-error">{error}</p>}
-
-        <button type="submit" className="btn-primary">
-          Login
-        </button>
-      </form>
+      {error && <p className="checkout-error">{error}</p>}
     </div>
   );
 }

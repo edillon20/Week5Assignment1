@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Navbar from "./components/Navigationbar";
 import StreamList from "./pages/StreamList";
 import Movies from "./pages/Movies";
@@ -14,6 +14,7 @@ import ProtectedRoute from "./auth/ProtectedRoute";
 import { useCart } from "./hooks/useCart";
 import { useMediaList } from "./hooks/useMediaList";
 import { useOrders } from "./hooks/useOrders";
+import { useCards } from "./hooks/useCards";
 
 function App() {
   const {
@@ -35,6 +36,7 @@ function App() {
   } = useMediaList();
 
   const { orders, addOrder } = useOrders();
+  const { cards, addCard,updateCard, deleteCard } = useCards();
 
   const cartCount = cartItems.reduce(
     (total, item) => total + Number(item.quantity || 0),
@@ -47,10 +49,21 @@ function App() {
 
       <div className="page-container">
         <Routes>
+          <Route path="/" element={<Navigate to="/movies" replace />} />
           <Route path="/login" element={<Login />} />
 
           <Route
-            path="/"
+            path="/movies"
+            element={
+              <Movies
+                addToCart={addToCart}
+                addMovieToWatchList={addMovieToWatchList}
+              />
+            }
+          />
+
+          <Route
+            path="/streamlist"
             element={
               <ProtectedRoute>
                 <StreamList
@@ -60,18 +73,6 @@ function App() {
                   updateRating={updateRating}
                   updateTitle={updateTitle}
                   deleteItem={deleteItem}
-                />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/movies"
-            element={
-              <ProtectedRoute>
-                <Movies
-                  addToCart={addToCart}
-                  addMovieToWatchList={addMovieToWatchList}
                 />
               </ProtectedRoute>
             }
@@ -125,7 +126,12 @@ function App() {
             path="/cards"
             element={
               <ProtectedRoute>
-                <CreditCards />
+                <CreditCards
+                  cards={cards}
+                  addCard={addCard}
+                  updateCard={updateCard}
+                  deleteCard={deleteCard}
+                />
               </ProtectedRoute>
             }
           />

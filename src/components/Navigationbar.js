@@ -1,18 +1,40 @@
-import React from "react";
+import React, { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
+import ConfirmDialog from "./ConfirmDialog";
 
 function Navbar({ cartCount = 0 }) {
   const { isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
+  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
+
+  const handleLogoutClick = () => {
+    setLogoutDialogOpen(true);
+  };
+
+  const confirmLogout = () => {
     logout();
+    setLogoutDialogOpen(false);
     navigate("/login");
+  };
+
+  const cancelLogout = () => {
+    setLogoutDialogOpen(false);
   };
 
   return (
     <nav className="navigationbar">
+      <ConfirmDialog
+        isOpen={logoutDialogOpen}
+        title="Logout?"
+        message="Are you sure you want to logout?"
+        confirmText="Logout"
+        cancelText="Cancel"
+        onConfirm={confirmLogout}
+        onCancel={cancelLogout}
+      />
+
       <h1 className="logo">StreamList</h1>
 
       <div className="navigationlinks">
@@ -70,7 +92,7 @@ function Navbar({ cartCount = 0 }) {
           <button
             type="button"
             className="btn-danger"
-            onClick={handleLogout}
+            onClick={handleLogoutClick}
           >
             Logout
           </button>

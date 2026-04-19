@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import Toast from "../components/Toast";
 import { useCards } from "../hooks/useCards";
 import ConfirmDialog from "../components/ConfirmDialog";
@@ -10,6 +11,11 @@ function formatCardNumber(value) {
 
 function CreditCards() {
   const { cards, addCard, deleteCard } = useCards();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const returnTo = location.state?.returnTo || "/checkout";
+
   const [toast, setToast] = useState({ message: "", type: "success" });
 
   const [formData, setFormData] = useState({
@@ -56,6 +62,11 @@ function CreditCards() {
       id: null,
       cardName: "",
     });
+  };
+
+  const handleUseSavedCard = (card) => {
+    localStorage.setItem("selectedCheckoutCard", JSON.stringify(card));
+    navigate(returnTo);
   };
 
   const handleChange = (e) => {
@@ -153,13 +164,24 @@ function CreditCards() {
               <p><strong>{card.cardHolder}</strong></p>
               <p>**** **** **** {card.last4}</p>
               <p>Expiry: {card.expiry}</p>
-              <button
-                type="button"
-                className="btn-danger"
-                onClick={() => openDeleteDialog(card)}
-              >
-                Delete
-              </button>
+
+              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                <button
+                  type="button"
+                  className="btn-primary"
+                  onClick={() => handleUseSavedCard(card)}
+                >
+                  Use This Card
+                </button>
+
+                <button
+                  type="button"
+                  className="btn-danger"
+                  onClick={() => openDeleteDialog(card)}
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           ))
         )}

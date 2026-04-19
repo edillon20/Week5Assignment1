@@ -2,7 +2,12 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Toast from "../components/Toast";
 import { useOfflineStatus } from "../hooks/useOfflineStatus";
-import {v4 as uuidv4} from "uuid";
+import { v4 as uuidv4 } from "uuid";
+
+function formatCardNumber(value) {
+  const digits = value.replace(/\D/g, "").slice(0, 16);
+  return digits.replace(/(.{4})/g, "$1 ").trim();
+}
 
 function Checkout({ cartItems = [], clearCart, addOrder }) {
   const navigate = useNavigate();
@@ -49,6 +54,33 @@ function Checkout({ cartItems = [], clearCart, addOrder }) {
   }, [safeCartItems]);
 
   useEffect(() => {
+    const selectedCardRaw = localStorage.getItem("selectedCheckoutCard");
+
+    if (selectedCardRaw) {
+      try {
+        const selectedCard = JSON.parse(selectedCardRaw);
+
+        setFormData((prev) => ({
+          ...prev,
+          cardName: selectedCard.cardHolder || "",
+          cardNumber: selectedCard.cardNumber || "",
+          expiry: selectedCard.expiry || "",
+          cvv: selectedCard.cvv || "",
+        }));
+
+        setToast({
+          message: `Loaded saved card for ${selectedCard.cardHolder}.`,
+          type: "success",
+        });
+
+        localStorage.removeItem("selectedCheckoutCard");
+      } catch {
+        localStorage.removeItem("selectedCheckoutCard");
+      }
+    }
+  }, []);
+
+  useEffect(() => {
     if (isOffline && !hasShownOfflineToast) {
       showToast("You are offline. Orders cannot be placed right now.", "error");
       setHasShownOfflineToast(true);
@@ -73,8 +105,16 @@ function Checkout({ cartItems = [], clearCart, addOrder }) {
 
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: name === "cardNumber" ? formatCardNumber(value) : value,
     }));
+  };
+
+  const goChooseSavedCard = () => {
+    navigate("/cards", {
+      state: {
+        returnTo: "/checkout",
+      },
+    });
   };
 
   const validateForm = () => {
@@ -155,8 +195,7 @@ function Checkout({ cartItems = [], clearCart, addOrder }) {
       return;
     }
 
-   const orderId = uuidv4();
-      
+    const orderId = uuidv4();
 
     const order = {
       id: orderId,
@@ -198,11 +237,7 @@ function Checkout({ cartItems = [], clearCart, addOrder }) {
   if (orderPlaced) {
     return (
       <div className="card checkout-page">
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={closeToast}
-        />
+        <Toast message={toast.message} type={toast.type} onClose={closeToast} />
 
         <h2>Order Confirmed</h2>
         <p>Your order has been placed successfully.</p>
@@ -233,11 +268,7 @@ function Checkout({ cartItems = [], clearCart, addOrder }) {
 
   return (
     <div className="card checkout-page">
-      <Toast
-        message={toast.message}
-        type={toast.type}
-        onClose={closeToast}
-      />
+      <Toast message={toast.message} type={toast.type} onClose={closeToast} />
 
       <h2>Checkout</h2>
       <p>Enter your billing and payment details below.</p>
@@ -311,6 +342,15 @@ function Checkout({ cartItems = [], clearCart, addOrder }) {
 
           <h3>Payment Details</h3>
 
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={goChooseSavedCard}
+            style={{ marginBottom: "12px" }}
+          >
+            Use A Saved Card
+          </button>
+
           <input
             type="text"
             name="cardName"
@@ -323,9 +363,10 @@ function Checkout({ cartItems = [], clearCart, addOrder }) {
           <input
             type="text"
             name="cardNumber"
-            placeholder="Card Number"
+            placeholder="1234 5678 9012 3456"
             value={formData.cardNumber}
             onChange={handleChange}
+            maxLength={19}
           />
           {errors.cardNumber && (
             <p className="checkout-error">{errors.cardNumber}</p>

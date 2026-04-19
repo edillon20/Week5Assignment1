@@ -38,7 +38,7 @@ function Checkout({ cartItems = [], clearCart, addOrder }) {
       0
     );
 
-    const tax = subtotal * 0.08;
+    const tax = subtotal * 0.065;
     const total = subtotal + tax;
 
     return {

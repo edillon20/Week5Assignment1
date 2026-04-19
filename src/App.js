@@ -8,11 +8,22 @@ import VideosPage from "./pages/VideosPage";
 import Subscriptions from "./pages/Subscriptions";
 import Checkout from "./pages/Checkout";
 import Orders from "./pages/Orders";
+import CreditCards from "./pages/CreditCards";
+import Login from "./pages/Login";
+import ProtectedRoute from "./auth/ProtectedRoute";
 import { useCart } from "./hooks/useCart";
 import { useMediaList } from "./hooks/useMediaList";
 import { useOrders } from "./hooks/useOrders";
 
 function App() {
+  const {
+    cartItems,
+    addToCart,
+    removeFromCart,
+    updateCartQuantity,
+    clearCart,
+  } = useCart();
+
   const {
     mediaList,
     addMediaItem,
@@ -22,14 +33,6 @@ function App() {
     updateTitle,
     deleteItem,
   } = useMediaList();
-
-  const {
-    cartItems,
-    addToCart,
-    removeFromCart,
-    updateCartQuantity,
-    clearCart,
-  } = useCart();
 
   const { orders, addOrder } = useOrders();
 
@@ -44,72 +47,108 @@ function App() {
 
       <div className="page-container">
         <Routes>
+          <Route path="/login" element={<Login />} />
+
           <Route
             path="/"
             element={
-              <StreamList
-                mediaList={mediaList}
-                addMediaItem={addMediaItem}
-                updateStatus={updateStatus}
-                updateRating={updateRating}
-                updateTitle={updateTitle}
-                deleteItem={deleteItem}
-              />
+              <ProtectedRoute>
+                <StreamList
+                  mediaList={mediaList}
+                  addMediaItem={addMediaItem}
+                  updateStatus={updateStatus}
+                  updateRating={updateRating}
+                  updateTitle={updateTitle}
+                  deleteItem={deleteItem}
+                />
+              </ProtectedRoute>
             }
           />
 
           <Route
             path="/movies"
             element={
-              <Movies
-                addToCart={addToCart}
-                addMovieToWatchList={addMovieToWatchList}
-              />
+              <ProtectedRoute>
+                <Movies
+                  addToCart={addToCart}
+                  addMovieToWatchList={addMovieToWatchList}
+                />
+              </ProtectedRoute>
             }
           />
 
           <Route
             path="/subscriptions"
-            element={<Subscriptions addToCart={addToCart} />}
+            element={
+              <ProtectedRoute>
+                <Subscriptions addToCart={addToCart} />
+              </ProtectedRoute>
+            }
           />
 
           <Route
             path="/cart"
             element={
-              <Cart
-                cartItems={cartItems}
-                removeFromCart={removeFromCart}
-                updateCartQuantity={updateCartQuantity}
-              />
+              <ProtectedRoute>
+                <Cart
+                  cartItems={cartItems}
+                  removeFromCart={removeFromCart}
+                  updateCartQuantity={updateCartQuantity}
+                />
+              </ProtectedRoute>
             }
           />
 
           <Route
             path="/checkout"
             element={
-              <Checkout
-                cartItems={cartItems}
-                clearCart={clearCart}
-                addOrder={addOrder}
-              />
+              <ProtectedRoute>
+                <Checkout
+                  cartItems={cartItems}
+                  clearCart={clearCart}
+                  addOrder={addOrder}
+                />
+              </ProtectedRoute>
             }
           />
 
           <Route
             path="/orders"
-            element={<Orders orders={orders} />}
+            element={
+              <ProtectedRoute>
+                <Orders orders={orders} />
+              </ProtectedRoute>
+            }
           />
 
-          <Route path="/about" element={<About />} />
+          <Route
+            path="/cards"
+            element={
+              <ProtectedRoute>
+                <CreditCards />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/about"
+            element={
+              <ProtectedRoute>
+                <About />
+              </ProtectedRoute>
+            }
+          />
 
           <Route
             path="/videos"
             element={
-              <VideosPage
-                mediaList={mediaList}
-                updateTitle={updateTitle}
-                deleteItem={deleteItem}
-              />
+              <ProtectedRoute>
+                <VideosPage
+                  mediaList={mediaList}
+                  updateTitle={updateTitle}
+                  deleteItem={deleteItem}
+                />
+              </ProtectedRoute>
             }
           />
         </Routes>
